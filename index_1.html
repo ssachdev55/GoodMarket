@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GoodMarket Matcher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: sticky header, left rail on desktop / bottom tab bar on phone; one working column per view. */
+:root{
+ --blue:#3C5A73;--blue-2:#4A6C88;--blue-ink:#223647;--on-blue:#fff;
+ --sand:#D5C29B;--sand-soft:#F6F0E3;--sand-edge:#E4D8BC;--sand-ink:#5A4A2B;
+ --ground:#EDF1F4;--paper:#fff;--tint:#F3F6F9;--tint-2:#E7EDF2;--active:#DAE5EE;
+ --ink:#1F2B35;--muted:#586671;--line:#D9E1E7;--line-strong:#B9C6D0;
+ --ok:#2F6B4F;--ok-bg:#E3F1E9;--likely:#2F5F8A;--likely-bg:#E2ECF6;--warn:#8A5A12;--warn-bg:#FBEFD9;--no:#6B7680;--no-bg:#EEF1F3;
+ --c-funding:#46705E;--c-materials:#94693A;--c-pro:#3C7580;--c-food:#A0602E;--c-kids:#476B91;--c-env:#4E7A3E;--c-housing:#76699A;--c-animals:#9D5860;
+ --shadow:0 1px 0 rgba(34,54,71,.05),0 18px 40px -26px rgba(34,54,71,.35);
+ --font-display:"Bricolage Grotesque","Public Sans",system-ui,sans-serif;
+ --font-body:"Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+ --header-h:64px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+ --blue:#7FA3C2;--blue-2:#97B6D1;--blue-ink:#DCE7F0;--on-blue:#0F1A23;
+ --sand:#B9A57A;--sand-soft:#2A2519;--sand-edge:#4A402A;--sand-ink:#E5D6B3;
+ --ground:#11181E;--paper:#18212A;--tint:#1F2A34;--tint-2:#25313C;--active:#24394B;
+ --ink:#E3E9EE;--muted:#9AA8B3;--line:#2B3844;--line-strong:#3E4F5D;
+ --ok:#7CC4A0;--ok-bg:#1A3127;--likely:#8DB8E0;--likely-bg:#1B2C3C;--warn:#E6B66A;--warn-bg:#36291A;--no:#9AA5AE;--no-bg:#232C34;
+ --c-funding:#7DB59B;--c-materials:#D2A26E;--c-pro:#74B5BF;--c-food:#DE9A66;--c-kids:#8AAED3;--c-env:#93C07F;--c-housing:#B1A5D6;--c-animals:#D8939B;
+ --shadow:0 1px 0 rgba(0,0,0,.3),0 18px 40px -26px rgba(0,0,0,.7);color-scheme:dark}}
+:root[data-theme="dark"]{
+ --blue:#7FA3C2;--blue-2:#97B6D1;--blue-ink:#DCE7F0;--on-blue:#0F1A23;
+ --sand:#B9A57A;--sand-soft:#2A2519;--sand-edge:#4A402A;--sand-ink:#E5D6B3;
+ --ground:#11181E;--paper:#18212A;--tint:#1F2A34;--tint-2:#25313C;--active:#24394B;
+ --ink:#E3E9EE;--muted:#9AA8B3;--line:#2B3844;--line-strong:#3E4F5D;
+ --ok:#7CC4A0;--ok-bg:#1A3127;--likely:#8DB8E0;--likely-bg:#1B2C3C;--warn:#E6B66A;--warn-bg:#36291A;--no:#9AA5AE;--no-bg:#232C34;
+ --c-funding:#7DB59B;--c-materials:#D2A26E;--c-pro:#74B5BF;--c-food:#DE9A66;--c-kids:#8AAED3;--c-env:#93C07F;--c-housing:#B1A5D6;--c-animals:#D8939B;
+ --shadow:0 1px 0 rgba(0,0,0,.3),0 18px 40px -26px rgba(0,0,0,.7);color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0}img{max-width:100%}
+[hidden]{display:none!important}
+body{background:var(--ground);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:31;background:var(--paper)}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue-2);outline-offset:2px}
+
+[data-c="Grants"]{--c:var(--c-funding)}[data-c="Materials & equipment"]{--c:var(--c-materials)}[data-c="Professional services"]{--c:var(--c-pro)}
+[data-c="Food & hunger"]{--c:var(--c-food)}[data-c="Children & youth"]{--c:var(--c-kids)}[data-c="Environment & parks"]{--c:var(--c-env)}
+[data-c="Housing & homelessness"]{--c:var(--c-housing)}[data-c="Animals"]{--c:var(--c-animals)}
+
+header{height:var(--header-h);background:var(--paper);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));position:sticky;top:env(safe-area-inset-top,0px);z-index:30}
+.logo{display:flex;align-items:center;gap:11px;font-family:var(--font-display);font-size:24px;font-weight:800;letter-spacing:-.035em}
+.logo svg{width:32px;height:32px;flex:none}
+.logo b{color:var(--blue-2);font-weight:inherit}
+.tagline{font-size:13.5px;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:5px;background:var(--sand-soft);color:var(--sand-ink);border:1px solid var(--sand-edge);font-size:12.5px;font-weight:700;padding:5px 10px;border-radius:99px;white-space:nowrap}
+.header-right{display:flex;gap:14px;align-items:center}
+
+.layout{display:flex;min-height:calc(100vh - var(--header-h))}
+.sidebar{width:236px;flex:none;padding:26px 14px;position:sticky;top:calc(var(--header-h) + env(safe-area-inset-top,0px));align-self:flex-start}
+.nav-label{font-size:12.5px;color:var(--muted);font-weight:600;padding:18px 13px 7px}
+.nav-label:first-child{padding-top:0}
+.nav-btn{display:flex;align-items:center;gap:12px;width:100%;border:0;background:transparent;text-align:left;padding:11px 13px;border-radius:11px;color:var(--ink);font-weight:600;font-size:14px;margin-bottom:3px;transition:background .15s}
+.nav-btn svg{width:20px;height:20px;flex:none;color:var(--muted)}
+.nav-btn:hover{background:var(--tint-2)}
+.nav-btn.active{background:var(--active);color:var(--blue-ink)}
+.nav-btn.active svg{color:var(--blue)}
+.nav-count{margin-left:auto;font-size:12px;background:var(--blue);color:var(--on-blue);border-radius:99px;padding:1px 8px;font-variant-numeric:tabular-nums}
+.main{flex:1;min-width:0;max-width:1080px;margin:0 auto;padding-block:38px 100px;padding-left:max(40px,env(safe-area-inset-left,0px));padding-right:max(40px,env(safe-area-inset-right,0px))}
+.view{display:none}.view.active{display:block;animation:viewIn .25s ease-out}
+@keyframes viewIn{from{opacity:.4;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+h1{font-family:var(--font-display);font-size:clamp(32px,4.4vw,50px);line-height:1.03;letter-spacing:-.035em;font-weight:800;margin:0 0 14px;text-wrap:balance}
+h2{font-family:var(--font-display);font-size:22px;line-height:1.15;letter-spacing:-.02em;font-weight:700;margin:0 0 6px;text-wrap:balance}
+h3{font-family:var(--font-display);font-size:19px;line-height:1.2;letter-spacing:-.015em;font-weight:700;margin:0;text-wrap:balance}
+.lead{color:var(--muted);line-height:1.6;max-width:64ch;font-size:16px;margin:0}
+.lead.sm{font-size:14.5px}
+.eyebrow{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600;color:var(--blue-2);margin-bottom:12px}
+.eyebrow::before{content:"";width:20px;height:5px;border-radius:3px;background:var(--sand)}
+
+.card{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:28px;box-shadow:var(--shadow)}
+.stack{display:grid;gap:18px}
+.form-card{margin-top:28px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 18px}
+.full{grid-column:1/-1}
+label,.label{display:block;font-size:14px;font-weight:600;margin-bottom:7px}
+.label small,label small{font-weight:500;color:var(--muted)}
+input[type=text],input[type=number],textarea,select{width:100%;border:1.5px solid var(--line-strong);border-radius:11px;padding:11px 13px;background:var(--paper);outline:none;font-size:15px;transition:border-color .15s,box-shadow .15s}
+textarea{min-height:104px;resize:vertical;line-height:1.5}
+input::placeholder,textarea::placeholder{color:var(--muted)}
+input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 4px color-mix(in srgb,var(--blue) 25%,transparent)}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{position:relative;display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--line-strong);background:var(--paper);border-radius:99px;padding:7px 14px;font-size:14px;font-weight:600;cursor:pointer;transition:border-color .15s,background .15s}
+.pill input{position:absolute;opacity:0;pointer-events:none}
+.pill svg{width:16px;height:16px;color:var(--c,var(--blue));flex:none}
+.pill:hover{border-color:var(--c,var(--blue))}
+.pill:has(input:checked){background:color-mix(in srgb,var(--c,var(--blue)) 14%,var(--paper));border-color:var(--c,var(--blue))}
+.pill:has(input:focus-visible){outline:3px solid var(--blue-2);outline-offset:2px}
+.example-note{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--sand-ink);background:var(--sand-soft);border:1px solid var(--sand-edge);border-radius:10px;padding:8px 12px;margin-bottom:18px}
+.example-note button{margin-left:auto;border:0;background:transparent;color:var(--blue);font-weight:700;font-size:13px;padding:2px 4px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1.5px solid transparent;border-radius:11px;padding:11px 18px;font-size:14.5px;font-weight:600;transition:background .15s,border-color .15s;text-decoration:none;white-space:nowrap}
+.btn.primary{background:var(--blue);color:var(--on-blue)}
+.btn.primary:hover{background:var(--blue-2)}
+.btn.secondary{background:var(--paper);border-color:var(--line-strong);color:var(--ink)}
+.btn.secondary:hover{border-color:var(--blue)}
+.btn:disabled{cursor:default;opacity:.65}
+.btn.small{padding:8px 13px;font-size:13.5px}
+.btn.lg{padding:13px 24px;font-size:15.5px}
+.btn svg{width:16px;height:16px}
+.actions{display:flex;justify-content:flex-end;align-items:center;gap:12px;flex-wrap:wrap;margin-top:22px}
+.actions .hint{margin-right:auto}
+.hint{font-size:13px;color:var(--muted)}
+
+.results{margin-top:34px}
+.results-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.summary-line{font-size:15px;color:var(--muted);max-width:70ch;margin:6px 0 0}
+.tally{display:flex;gap:8px;flex-wrap:wrap}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;padding:4px 10px;border-radius:99px;white-space:nowrap}
+.status::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.status.qualifies{color:var(--ok);background:var(--ok-bg)}
+.status.likely{color:var(--likely);background:var(--likely-bg)}
+.status.check{color:var(--warn);background:var(--warn-bg)}
+.status.not_eligible{color:var(--no);background:var(--no-bg)}
+.match-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.match{position:relative;display:flex;flex-direction:column;gap:12px;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:var(--shadow);min-width:0}
+.match.saved{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue)}
+.match-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.type{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600;color:var(--c)}
+.ico{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:color-mix(in srgb,var(--c,var(--blue)) 15%,var(--paper));color:var(--c,var(--blue));flex:none}
+.ico svg{width:19px;height:19px}
+.org{font-size:13.5px;color:var(--muted);margin-top:2px}
+.facts{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:5px 14px;margin:0;padding:12px 14px;background:var(--tint);border-radius:12px;font-size:13.5px;line-height:1.45}
+.facts dt{color:var(--muted)}.facts dd{margin:0;font-weight:600;min-width:0}
+.why{border-left:4px solid var(--sand);background:var(--sand-soft);padding:10px 14px;border-radius:0 11px 11px 0;font-size:14px;line-height:1.5}
+.why b{display:block;font-size:12.5px;color:var(--sand-ink);margin-bottom:2px}
+.confirm{margin:0;padding:0;list-style:none;display:grid;gap:5px;font-size:13.5px}
+.confirm li{display:flex;gap:8px;align-items:flex-start}
+.confirm li::before{content:"";flex:none;width:14px;height:14px;margin-top:3px;border:1.5px solid var(--line-strong);border-radius:4px}
+.confirm-title{font-size:12.5px;font-weight:700;color:var(--muted)}
+.fitbar{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.fitbar span{flex:1;height:6px;border-radius:9px;background:var(--tint-2);overflow:hidden}
+.fitbar i{display:block;height:100%;background:var(--c,var(--blue));border-radius:9px}
+.match-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding-top:4px}
+.saved-flag{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--blue)}
+.saved-flag svg{width:16px;height:16px}
+.due{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--muted);margin-top:8px}
+.due svg{width:15px;height:15px;flex:none}
+.due.urgent{color:var(--warn);background:var(--warn-bg);padding:4px 10px;border-radius:99px}
+select.stage{width:auto;padding:5px 30px 5px 12px;font-size:13px;font-weight:700;border-radius:99px;background-color:var(--tint)}
+.checklist{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:7px}
+.checklist label{display:flex;gap:10px;align-items:flex-start;font-size:14px;font-weight:500;margin:0;cursor:pointer}
+.checklist input{width:17px;height:17px;margin:2px 0 0;accent-color:var(--blue);flex:none}
+.checklist input:checked+span{text-decoration:line-through;color:var(--muted)}
+.link-btn{border:0;background:transparent;color:var(--muted);font-weight:600;font-size:13.5px;padding:6px 4px}
+.link-btn:hover{color:var(--ink)}
+details.others{margin-top:22px}
+details.others summary{cursor:pointer;font-weight:700;font-size:14.5px;padding:10px 0;color:var(--muted)}
+.no-list{display:grid;gap:8px;margin-top:6px}
+.no-item{display:flex;gap:12px;align-items:flex-start;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px}
+.no-item p{margin:2px 0 0;color:var(--muted);font-size:13.5px}
+
+.empty{border:1.5px dashed var(--line-strong);border-radius:16px;padding:30px 24px;text-align:center;color:var(--muted);background:var(--paper);font-size:14.5px;line-height:1.55}
+.empty b{display:block;color:var(--ink);font-size:16px;margin-bottom:4px}
+.thinking{display:flex;align-items:center;gap:14px;justify-content:center}
+.spinner{width:22px;height:22px;border-radius:50%;border:3px solid var(--tint-2);border-top-color:var(--blue);animation:spin .8s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.mode-note{font-size:13px;color:var(--warn);background:var(--warn-bg);border-radius:10px;padding:9px 13px;margin-bottom:14px}
+
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:26px 0}
+.metric{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.metric b{display:block;font-family:var(--font-display);font-size:34px;line-height:1;letter-spacing:-.03em;font-weight:800;font-variant-numeric:tabular-nums}
+.metric span{display:block;font-size:13px;color:var(--muted);margin-top:8px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0}
+.seg{display:inline-flex;background:var(--tint-2);border-radius:12px;padding:4px;gap:2px}
+.seg button{border:0;background:transparent;border-radius:9px;padding:8px 14px;font-weight:600;font-size:14px;color:var(--muted)}
+.seg button.on{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.searchbar{max-width:520px;flex:1;min-width:200px}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--paper)}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:620px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12.5px;color:var(--muted);font-weight:700;background:var(--tint)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.section-gap{margin-top:30px}
+
+.modal-backdrop{position:fixed;inset:0;background:rgba(15,25,33,.55);backdrop-filter:blur(3px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-backdrop.open{display:flex}
+.modal{background:var(--paper);width:min(560px,100%);max-height:calc(100vh - 40px);overflow:auto;border-radius:22px;padding:30px;box-shadow:0 34px 90px -24px rgba(0,0,0,.6);position:relative;animation:pop .2s ease-out}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+.close{position:absolute;right:14px;top:14px;width:36px;height:36px;border:0;background:transparent;border-radius:50%;font-size:26px;line-height:1;color:var(--muted)}
+.close:hover{background:var(--tint)}
+.choice{display:block;width:100%;text-align:left;border:1.5px solid var(--line);background:var(--paper);border-radius:13px;padding:14px 16px;margin-top:10px;transition:border-color .15s,background .15s}
+.choice:hover{border-color:var(--blue);background:var(--tint)}
+.choice b{display:block;font-size:15px}.choice span{display:block;font-size:13.5px;color:var(--muted);margin-top:3px}
+.question{font-size:14.5px;font-weight:700;margin:20px 0 2px}
+.stars{display:flex;gap:9px;justify-content:center;margin:22px 0 8px}
+.star{width:54px;height:54px;border-radius:14px;border:1.5px solid var(--line-strong);background:var(--paper);font-family:var(--font-display);font-size:21px;font-weight:700}
+.star:hover{border-color:var(--blue)}
+.star.on{background:var(--sand);border-color:var(--sand);color:#2A2210}
+.scale{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);max-width:330px;margin:0 auto}
+.profile-box{background:var(--tint);border-radius:12px;padding:13px 15px;margin:14px 0;font-size:14px;line-height:1.55}
+.toast{position:fixed;right:24px;bottom:calc(24px + env(safe-area-inset-bottom,0px));background:var(--blue-ink);color:var(--paper);padding:13px 19px;border-radius:13px;border-left:6px solid var(--sand);font-size:14.5px;font-weight:600;z-index:150;display:none}
+.toast.show{display:block;animation:pop .2s ease-out}
+
+@media(max-width:860px){
+ .tagline,header .badge{display:none}
+ .layout{display:block}
+ .sidebar{position:fixed;left:0;right:0;bottom:0;top:auto;width:100%;display:flex;gap:2px;padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));background:var(--paper);border-top:1px solid var(--line);z-index:40}
+ .nav-label{display:none}
+ .nav-btn{flex:1;min-width:0;flex-direction:column;gap:3px;margin:0;padding:7px 2px;font-size:11px;line-height:1.15;text-align:center}
+ .nav-count{position:absolute;margin:0;transform:translate(14px,-4px);font-size:10px;padding:0 6px}
+ .nav-btn{position:relative}
+ .main{padding-block:28px 120px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+ .match-grid,.form-grid{grid-template-columns:minmax(0,1fr)}
+ .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .card{padding:20px}
+ .toast{left:16px;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+}
+@media(max-width:480px){.modal{padding:24px 18px}.star{width:46px;height:46px}.metric b{font-size:28px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+ <div class="logo"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#3C5A73"/><path d="M6.5 13 9 7.5h14L25.5 13z" fill="#F3ECDC"/><path d="M6.5 13a3.17 3.17 0 0 0 6.33 0 3.17 3.17 0 0 0 6.34 0 3.17 3.17 0 0 0 6.33 0z" fill="#F3ECDC"/><path d="M9 17v8M23 17v8" stroke="#F3ECDC" stroke-width="2.2" stroke-linecap="round"/></svg><span>Good<b>Market</b></span></div>
+ <div class="header-right"><span class="badge">Working MVP · Boston</span><span class="tagline">Matching charities and volunteers to what they qualify for</span></div>
+</header>
+
+<div class="layout">
+<nav class="sidebar" aria-label="Main navigation">
+ <div class="nav-label">Match</div>
+ <button class="nav-btn" data-view="charity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7.5-4.6-9.2-9.4A5 5 0 0 1 12 7.3a5 5 0 0 1 9.2 3.3C19.5 15.4 12 20 12 20z"/></svg><span>For charities</span></button>
+ <button class="nav-btn" data-view="volunteer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17.5 14.5c2.4 0 4.5 1.6 4.5 4.5"/></svg><span>For volunteers</span></button>
+ <div class="nav-label">Explore</div>
+ <button class="nav-btn" data-view="browse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>All opportunities</span></button>
+ <button class="nav-btn" data-view="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11a1 1 0 0 1 1 1V21l-6.5-4-6.5 4V4.5a1 1 0 0 1 1-1z"/></svg><span>My list</span><b class="nav-count" id="savedCount" hidden>0</b></button>
+</nav>
+
+<main class="main">
+<!-- CHARITY -->
+<section id="charity" class="view">
+ <div class="eyebrow">Charity matcher</div>
+ <h1>See what your charity already qualifies for.</h1>
+ <p class="lead">Describe your organization and what it needs. GoodMarket checks every Boston-area grant and resource against your profile and tells you where you qualify, what to confirm, and what to skip.</p>
+ <div class="card form-card">
+  <div class="example-note" id="cExample">Example profile filled in so you can see how it works. Replace it with your own.<button type="button" data-clear="c">Clear form</button></div>
+  <div class="form-grid">
+   <div class="full"><label for="cPrompt">Describe your organization and what you're looking for</label><textarea id="cPrompt">We're a small volunteer-run nonprofit in Roxbury that runs a free after-school reading and snack program for about 60 kids. We're moving into a donated space this winter and need furniture, a few computers for homework help, and some funding for books and supplies. We have no paid accountant.</textarea></div>
+   <div><label for="cName">Organization name</label><input type="text" id="cName" value="Roxbury Reading Room (example)"></div>
+   <div><label for="cLoc">Where you operate</label><input type="text" id="cLoc" value="Roxbury, Boston, MA"></div>
+   <div><label for="cStatus">Legal status</label><select id="cStatus"><option value="501(c)(3) nonprofit" selected>501(c)(3) nonprofit</option><option value="Nonprofit, 501(c)(3) pending">Nonprofit, 501(c)(3) pending</option><option value="Senior or civic group (not incorporated)">Senior or civic group (not incorporated)</option><option value="School or public agency">School or public agency</option><option value="Informal community group">Informal community group</option><option value="Not sure">Not sure</option></select></div>
+   <div><label for="cSize">Size</label><select id="cSize"><option value="All volunteer, no paid staff" selected>All volunteer, no paid staff</option><option value="1–5 paid staff">1–5 paid staff</option><option value="6–25 paid staff">6–25 paid staff</option><option value="More than 25 paid staff">More than 25 paid staff</option></select></div>
+   <div class="full"><span class="label">What do you need?</span><div class="pills" id="cNeeds">
+    <label class="pill" data-c="Grants"><input type="checkbox" value="Grants" checked>Grants</label>
+    <label class="pill" data-c="Materials & equipment"><input type="checkbox" value="Materials & equipment" checked>Materials &amp; equipment</label>
+    <label class="pill" data-c="Professional services"><input type="checkbox" value="Professional services" checked>Professional services</label>
+   </div></div>
+   <div class="full"><span class="label">Who you serve <small>(choose any)</small></span><div class="pills" id="cServe">
+    <label class="pill"><input type="checkbox" value="Children & youth" checked>Children &amp; youth</label>
+    <label class="pill"><input type="checkbox" value="Older adults / seniors">Older adults</label>
+    <label class="pill"><input type="checkbox" value="Families">Families</label>
+    <label class="pill"><input type="checkbox" value="People facing food insecurity">Food insecurity</label>
+    <label class="pill"><input type="checkbox" value="People experiencing homelessness">Homelessness</label>
+    <label class="pill"><input type="checkbox" value="Arts & public space">Arts &amp; public space</label>
+    <label class="pill"><input type="checkbox" value="Neighborhood / civic">Neighborhood &amp; civic</label>
+   </div></div>
+  </div>
+  <div class="actions"><span class="hint" id="cCount"></span><button class="btn primary lg" id="cGo">Find what I qualify for</button></div>
+ </div>
+ <div class="results" id="cResults"></div>
+</section>
+
+<!-- VOLUNTEER -->
+<section id="volunteer" class="view">
+ <div class="eyebrow">Volunteer matcher</div>
+ <h1>Find where you can help this week.</h1>
+ <p class="lead">Tell us who's volunteering, when you're free, and what you care about. GoodMarket checks age limits, schedules and requirements so you only see shifts you can actually sign up for.</p>
+ <div class="card form-card">
+  <div class="example-note" id="vExample">Example profile filled in so you can see how it works. Replace it with your own.<button type="button" data-clear="v">Clear form</button></div>
+  <div class="form-grid">
+   <div class="full"><label for="vPrompt">Describe who's volunteering and what you'd like to do</label><textarea id="vPrompt">A team of 8 from a Boston software company. We want a one-off team day on a weekday, ideally something hands-on with kids or food. A couple of us would like an ongoing tutoring role after that.</textarea></div>
+   <div><label for="vName">Your name or group</label><input type="text" id="vName" value="Harbor Software team (example)"></div>
+   <div><label for="vWho">Who's volunteering</label><select id="vWho"><option value="Individual">Just me</option><option value="Family with children">Family with children</option><option value="Company or group" selected>Company or group</option><option value="Student group">Student group</option></select></div>
+   <div><label for="vAge">Youngest volunteer's age</label><select id="vAge"><option value="Under 13">Under 13</option><option value="13–15">13–15</option><option value="16–17">16–17</option><option value="18–54" selected>18–54</option><option value="55+">55 or older</option></select></div>
+   <div><label for="vSize">How many people</label><input type="number" id="vSize" min="1" value="8"></div>
+   <div class="full"><span class="label">Causes you care about</span><div class="pills" id="vCauses">
+    <label class="pill" data-c="Food & hunger"><input type="checkbox" value="Food & hunger" checked>Food &amp; hunger</label>
+    <label class="pill" data-c="Children & youth"><input type="checkbox" value="Children & youth" checked>Children &amp; youth</label>
+    <label class="pill" data-c="Environment & parks"><input type="checkbox" value="Environment & parks">Environment &amp; parks</label>
+    <label class="pill" data-c="Housing & homelessness"><input type="checkbox" value="Housing & homelessness">Housing &amp; homelessness</label>
+    <label class="pill" data-c="Animals"><input type="checkbox" value="Animals">Animals</label>
+   </div></div>
+   <div class="full"><span class="label">When you're free</span><div class="pills" id="vWhen">
+    <label class="pill"><input type="checkbox" value="Weekday daytime" checked>Weekday daytime</label>
+    <label class="pill"><input type="checkbox" value="Weekday evenings">Weekday evenings</label>
+    <label class="pill"><input type="checkbox" value="Saturdays">Saturdays</label>
+    <label class="pill"><input type="checkbox" value="Ongoing weekly commitment">Ongoing weekly</label>
+    <label class="pill"><input type="checkbox" value="Has a car and driver's license">Have a car &amp; license</label>
+   </div></div>
+  </div>
+  <div class="actions"><span class="hint" id="vCount"></span><button class="btn primary lg" id="vGo">Find my volunteer matches</button></div>
+ </div>
+ <div class="results" id="vResults"></div>
+</section>
+
+<!-- BROWSE -->
+<section id="browse" class="view">
+ <div class="eyebrow">Directory</div>
+ <h1>Every opportunity in GoodMarket.</h1>
+ <p class="lead">The full Boston-area list behind the matchers. Use the matchers to see which ones you qualify for.</p>
+ <div class="toolbar"><div class="seg" id="browseSide"><button data-side="all" class="on">All</button><button data-side="charity">For charities</button><button data-side="volunteer">For volunteers</button></div><input type="text" class="searchbar" id="browseQ" placeholder="Search grants, food, tutoring, Newton…" aria-label="Search opportunities"></div>
+ <div class="match-grid" id="browseGrid"></div>
+</section>
+
+<!-- SAVED -->
+<section id="saved" class="view">
+ <div class="eyebrow">Your list</div>
+ <h1>Opportunities you're pursuing.</h1>
+ <p class="lead">Everything you've added to your list, with what you told us about it.</p>
+ <div class="metrics" id="myMetrics"></div>
+ <div id="savedList"></div>
+ <p class="hint section-gap" id="saveNote"></p>
+</section>
+
+</main>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button class="close" id="modalClose" aria-label="Close">×</button><div id="modalContent"></div></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+window.addEventListener("error",e=>{const t=document.getElementById("toast");if(t){t.textContent="Something went wrong: "+(e.message||"unknown error");t.classList.add("show")}});
+window.addEventListener("unhandledrejection",e=>{const r=e.reason;const t=document.getElementById("toast");if(t&&!(r&&r.code)){t.textContent="Something went wrong: "+((r&&r.message)||r);t.classList.add("show")}});
+(function GoodMarketApp(){
+"use strict";
+const S=(p)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+const ICON={
+ "Grants":S('<rect x="2.5" y="6" width="19" height="12" rx="2.2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 9.5v.01M18 14.5v.01"/>'),
+ "Materials & equipment":S('<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/>'),
+ "Professional services":S('<rect x="3" y="7.5" width="18" height="12" rx="2"/><path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M3 13h18"/>'),
+ "Food & hunger":S('<path d="M7 3v8a2 2 0 0 0 2 2v8"/><path d="M5 3v5M9 3v5M17 21V3c-2.2 1-3.5 3.5-3.5 7 0 2 1.2 3 3.5 3"/>'),
+ "Children & youth":S('<path d="m2.5 9 9.5-5 9.5 5-9.5 5z"/><path d="M6.5 11.3V16c0 1.2 2.5 2.8 5.5 2.8s5.5-1.6 5.5-2.8v-4.7M21.5 9v6"/>'),
+ "Environment & parks":S('<path d="M5 21c0-9 5-15 15-16-1 10-7 15-15 16z"/><path d="M5 21 13 13"/>'),
+ "Housing & homelessness":S('<path d="m3 11 9-7 9 7"/><path d="M5 9.5V20h14V9.5"/><path d="M9.5 20v-5.5a2.5 2.5 0 0 1 5 0V20"/>'),
+ "Animals":S('<circle cx="5.5" cy="10" r="2"/><circle cx="9.5" cy="5.5" r="2"/><circle cx="14.5" cy="5.5" r="2"/><circle cx="18.5" cy="10" r="2"/><path d="M12 11c-3 0-6 4.5-6 7a2.5 2.5 0 0 0 3.5 2.2c1.6-.6 3.4-.6 5 0A2.5 2.5 0 0 0 18 18c0-2.5-3-7-6-7z"/>'),
+ clock:S('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+ check:S('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/>'),
+ out:S('<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>')
+};
+
+/* ---------- Opportunity data (from the ES 30 GoodMarket documents) ---------- */
+const OPPS=[
+ {id:"g1",side:"charity",cat:"Grants",name:"Age Strong FY27 Rolling Grant",org:"City of Boston, Age Strong Commission",
+  summary:"Up to $1,500 for small programs serving Boston residents.",
+  facts:{"Amount":"Up to $1,500","Who can apply":"Eligible nonprofits and qualifying senior or civic groups","Deadline":"Next review Nov 23, 2026, 9 PM · final Mar 23, 2027 (while funds last)"},
+  eligibility:"Eligible nonprofits and qualifying senior or civic groups; small programs serving Boston residents. Offered by the city's Age Strong Commission, which serves older Bostonians.",
+  deadline:"Next review deadline: November 23, 2026, 9 PM; final deadline March 23, 2027, subject to available funds.",
+  link:"https://content.boston.gov/departments/age-strong-commission/age-strongs-2027-rolling-grant-opportunity"},
+ {id:"g2",side:"charity",cat:"Grants",name:"Public Art for Spatial Justice",org:"New England Foundation for the Arts (NEFA)",
+  summary:"$15,000–$30,000 for Massachusetts community organizations working with artists on public art about spatial justice.",
+  facts:{"Amount":"$15,000–$30,000","Who can apply":"Massachusetts community organizations collaborating with artists","Deadline":"Dec 1, 2026, 11:59 PM ET"},
+  eligibility:"Massachusetts community organizations collaborating with artists on public art projects addressing spatial justice.",
+  deadline:"December 1, 2026, 11:59 PM ET.",link:"https://www.nefa.org/CreateSpatialJustice"},
+ {id:"g3",side:"charity",cat:"Grants",name:"Community Donations",org:"Eastern Bank Foundation",
+  summary:"Funding for eligible 501(c)(3) organizations, including Boston-area applicants.",
+  facts:{"Amount":"Varies","Who can apply":"Eligible 501(c)(3) organizations","Deadline":"Rolling · decisions usually within 60 days"},
+  eligibility:"Eligible 501(c)(3) organizations, including Boston-area applicants.",deadline:"Rolling requests; decisions generally within 60 days.",
+  link:"https://www2.easternbank.com/about-us/eastern-bank-foundation/apply"},
+ {id:"g4",side:"charity",cat:"Grants",name:"Small Community Grants",org:"City of Boston, Treasury",
+  summary:"$500–$2,000 for projects benefiting Boston residents.",
+  facts:{"Amount":"$500–$2,000","Who can apply":"Projects benefiting Boston residents","Deadline":"Fall 2026 cycle closed · next cycle late March 2027"},
+  eligibility:"Projects benefiting Boston residents.",deadline:"Fall 2026 cycle is closed. Upcoming cycle: late March 2027.",
+  link:"https://content.boston.gov/departments/treasury/small-grants-trust-program"},
+ {id:"m1",side:"charity",cat:"Materials & equipment",name:"Donated office furniture",org:"The Furniture Trust, Arlington",
+  summary:"Free donated office furniture for nonprofits, schools and community organizations.",
+  facts:{"Cost":"No membership fee","Who can apply":"Nonprofits, schools, community organizations","How":"Submit a furniture wishlist"},
+  eligibility:"Nonprofits, schools and community organizations. Submit a wishlist; matching depends on available inventory; no membership fee; confirm delivery arrangements.",
+  deadline:"Ongoing.",link:"https://www.thefurnituretrust.org/receive"},
+ {id:"m2",side:"charity",cat:"Materials & equipment",name:"Refurbished computers & digital inclusion",org:"MACIR",
+  summary:"Low-cost refurbished computers in bulk and digital inclusion partnerships.",
+  facts:{"Cost":"Low cost, not free · ask for pricing","Who can apply":"Massachusetts nonprofits and community organizations","How":"Contact MACIR"},
+  eligibility:"Nonprofits and other community organizations in Massachusetts, including Greater Boston. Contact for pricing and availability; not a guaranteed free donation.",
+  deadline:"Ongoing.",link:"https://macir.org/partners/"},
+ {id:"m3",side:"charity",cat:"Materials & equipment",name:"Service Partners: kids' essentials",org:"Cradles to Crayons Boston",
+  summary:"Children's clothing, shoes, diapers and other essentials to distribute to the kids you serve.",
+  facts:{"Cost":"Free to approved partners","Who can apply":"Approved nonprofit, school and agency partners","Status":"New partner intake paused · inquiry form open"},
+  eligibility:"Approved nonprofit, school and agency partners who distribute to children. Existing partners can order; new partnership intake is currently paused, but an inquiry form is available.",
+  deadline:"New partner intake paused.",link:"https://www.cradlestocrayons.org/boston/what-we-do/service-partners/become-a-partner/"},
+ {id:"p1",side:"charity",cat:"Professional services",name:"Nonprofit Assistance Program",org:"Lawyers Clearinghouse",
+  summary:"Free legal referrals: governance, contracts, incorporation and employment.",
+  facts:{"Cost":"Free referrals · filing fees may apply","Who can apply":"Eligible Massachusetts nonprofits","Note":"Not for urgent matters"},
+  eligibility:"Eligible Massachusetts nonprofits. Covers governance, contracts, incorporation and employment matters. Referrals subject to capacity; not suitable for urgent matters; filing fees may still apply.",
+  deadline:"Apply online, ongoing.",link:"https://lawyersclearinghouse.org/nonprofit-programs/"},
+ {id:"p2",side:"charity",cat:"Professional services",name:"Free bookkeeping & tax reporting",org:"Nonprofit Community Support, Inc. (Duxbury)",
+  summary:"No-cost bookkeeping and tax reporting for small community nonprofits, plus webinars.",
+  facts:{"Cost":"Free","Who can apply":"Small community nonprofits","Note":"Based in Duxbury · confirm they serve Boston"},
+  eligibility:"Small community nonprofits. Contact provider to confirm eligibility and capacity for a Boston-area organization.",
+  deadline:"Ongoing.",link:"https://www.npcommunitysupport.org/"},
+
+ {id:"v1",side:"volunteer",cat:"Food & hunger",name:"Warehouse food sorting",org:"The Greater Boston Food Bank",
+  summary:"Sort food in the warehouse in drop-in shifts. No long-term commitment.",
+  facts:{"Where":"70 South Bay Ave, Boston 02118","When":"Mon–Fri 9–12 & 1–4 · Sat 9–12 & 1–3:30","Commitment":"3–3.5 hour shifts, no long-term commitment"},
+  eligibility:"Shifts of 3–3.5 hours; long-term commitment not required. No age requirement listed in our data.",link:"https://gbfb.org/get-involved/volunteer"},
+ {id:"v2",side:"volunteer",cat:"Food & hunger",name:"Medically tailored meal prep",org:"Community Servings",
+  summary:"Help the kitchen team prepare and package medically tailored meals from scratch.",
+  facts:{"Where":"179 Amory St, Jamaica Plain (Stony Brook, Orange Line)","When":"Mon–Fri 9–12, 1–4, 4–7","Age":"13+ · orientation before first shift"},
+  eligibility:"Age 13+. All new volunteers get an orientation before their shift.",link:"https://servings.org/volunteer"},
+ {id:"v3",side:"volunteer",cat:"Food & hunger",name:"Day shelter for women",org:"Women's Lunch Place",
+  summary:"Meal prep and serving, welcome desk, computer help for guests, or meal delivery driving.",
+  facts:{"Where":"67 Newbury St, Back Bay","When":"Meals Mon–Sat 7am–2pm · Resource center Mon–Fri 8–1:30 · Drivers Mon–Fri","Age":"16+ · groups of 5 can skip orientation"},
+  eligibility:"Age 16+. Apply online; a coordinator responds within three weeks, then an in-person orientation. Groups of 5 can prep and serve meals without orientation (email volunteer@womenslunchplace.org). Meal Delivery drivers need their own vehicle and a valid driver's license.",
+  link:"https://womenslunchplace.org/volunteer"},
+ {id:"v4",side:"volunteer",cat:"Children & youth",name:"The Giving Factory",org:"Cradles to Crayons",
+  summary:"Sort and pack donated clothing and essentials for kids. Very family-friendly.",
+  facts:{"Where":"281 Newtonville Ave, Newton 02460","When":"Wed & Thu 10–12, 1–3 · Fri 10–12 · Sat 10–12, 1–3 · large groups Tue 10–12 on request","Age":"5+ · under 18 with an adult"},
+  eligibility:"Age 5+. Children 5–18 must have an adult present the whole shift. Large-group shifts Tuesdays 10–12 may be available on request.",
+  link:"https://www.cradlestocrayons.org/boston/take-action/volunteer/in-the-giving-factory/"},
+ {id:"v5",side:"volunteer",cat:"Children & youth",name:"Writing & tutoring for K–12",org:"826 Boston",
+  summary:"Tutor students in after-school writing and homework programs.",
+  facts:{"Where":"Roxbury center","When":"Mon–Thu 4:15–6:15 PM (after-school tutoring)","Age":"16+ · application, CORI, training"},
+  eligibility:"Volunteers over 16 can tutor in K–8 programs. Review orientation guide, submit tutor application and Massachusetts CORI background check, attend New Tutor Training, then sign up for shifts.",
+  link:"https://826boston.org/get-involved/become-a-volunteer/"},
+ {id:"v6",side:"volunteer",cat:"Children & youth",name:"Reading coach (55+)",org:"Literations",
+  summary:"Meet 1:1 with students for 30-minute reading sessions twice a week.",
+  facts:{"Where":"Schools in Boston, Chelsea and Framingham","When":"Oct–June · at least 4 hours a week","Age":"55+ · background check, orientation"},
+  eligibility:"Must be 55 or older. Background check and orientation. At least 4 hours a week, October to June. Contact (617) 399-4621 or recruitment@literations.org.",
+  link:"https://www.literations.org/volunteer"},
+ {id:"v7",side:"volunteer",cat:"Children & youth",name:"Mentor",org:"Big Brothers Big Sisters of Mass Bay",
+  summary:"Spend a few hours, a couple of times a month, with a young person.",
+  facts:{"When":"A few hours, twice a month","Commitment":"One year · Big Futures option is more flexible (high schoolers)"},
+  eligibility:"One-year commitment, a few hours a couple of times a month. Big Futures offers 1:1 mentoring for high school students with a more flexible commitment.",
+  link:"https://www.emassbigs.org/volunteer"},
+ {id:"v8",side:"volunteer",cat:"Environment & parks",name:"Park cleanups & rose garden",org:"Emerald Necklace Conservancy",
+  summary:"Litter cleanups, invasive plant removal and planting, plus seasonal rose garden care.",
+  facts:{"Where":"Emerald Necklace parks · Kelleher Rose Garden, Back Bay Fens","When":"Second Saturdays year-round · Tuesdays with Roses (seasonal)","Age":"Rose garden is youth-friendly, 5+"},
+  eligibility:"Second Saturdays year-round. Tuesdays with Roses is seasonal and youth friendly (5+). Ongoing roles: Woodlands Volunteer Corps, Ambassadors, Docents.",
+  link:"https://emeraldnecklace.org/volunteer"},
+ {id:"v9",side:"volunteer",cat:"Environment & parks",name:"Charles River Esplanade",org:"Esplanade Association",
+  summary:"Horticulture projects and help with park programs and events.",
+  facts:{"Where":"Charles River Esplanade","Commitment":"Individual Volunteer Program · 15-min orientation before first shift"},
+  eligibility:"Individual Volunteer Program; a brief orientation about 15 minutes before your first shift.",link:"https://esplanade.org/volunteer/"},
+ {id:"v10",side:"volunteer",cat:"Housing & homelessness",name:"Build days & ReStore",org:"Habitat for Humanity Greater Boston",
+  summary:"Build homes alongside the construction team and partner families, or help at the ReStore.",
+  facts:{"When":"Build days 9am–3:30pm","Roles":"Construction · ReStore donations, customers, repairs"},
+  eligibility:"Build days 9am–3:30pm alongside construction team and partner families. ReStore: processing donations, moving merchandise, helping customers, repairing items.",
+  link:"https://habitatboston.org/volunteer/"},
+ {id:"v11",side:"volunteer",cat:"Animals",name:"Shelter animal care",org:"Animal Rescue League of Boston",
+  summary:"Feed and train shelter animals, care for community cats, staff events, or foster.",
+  facts:{"Where":"10 Chandler St, Boston · 55 Anna's Place, Dedham","Roles":"Animal care · community cats · events · office · fostering"},
+  eligibility:"Roles: feeding and training shelter animals, caring for community cats, staffing special events, office support, fostering.",
+  link:"https://www.arlboston.org/get-involved/volunteer/"},
+ {id:"v12",side:"volunteer",cat:"Housing & homelessness",name:"Shelter & community support",org:"Friends of Boston's Homeless",
+  summary:"Prepare and serve meals, host bingo and social events, and spend time with shelter guests.",
+  facts:{"Where":"Woods Mullen and Southampton shelters · Quincy Street Kitchen · supportive housing","Roles":"Meals · activities · cleanups and planting"},
+  eligibility:"Prepare and serve meals, host activities such as bingo, help with cleanups and planting projects, spend time with shelter guests.",
+  link:"https://fobh.org/ways-to-help/more-volunteer-opportunities/"}
+];
+const byId=Object.fromEntries(OPPS.map(o=>[o.id,o]));
+const STATUS={qualifies:"Qualifies",likely:"Likely qualifies",check:"Check eligibility",not_eligible:"Not a fit"};
+const ORDER={qualifies:0,likely:1,check:2,not_eligible:3};
+const DUE={g1:[["2026-11-23T21:00:00-05:00","Next review deadline"],["2027-03-23T23:59:00-04:00","Final deadline"]],g2:[["2026-12-01T23:59:00-05:00","Deadline"]]};
+function nextDue(id){
+ const now=Date.now();const d=(DUE[id]||[]).map(([iso,l])=>({t:new Date(iso).getTime(),l})).find(x=>x.t>now);if(!d)return null;
+ const days=Math.ceil((d.t-now)/864e5);
+ return{...d,days,urgent:days<=14,date:new Date(d.t).toLocaleDateString("en-US",{month:"short",day:"numeric"})};
+}
+function dueHTML(id){const d=nextDue(id);if(!d)return"";const when=d.days<=1?"within a day":`in ${d.days} days`;return`<div class="due ${d.urgent?"urgent":""}">${ICON.clock}${esc(d.l)} ${when} · ${d.date}</div>`}
+const urg=id=>{const d=nextDue(id);return d&&d.urgent?1:0};
+const STAGES={charity:[["saved","Saved"],["applying","Applying"],["applied","Applied"],["awarded","Awarded"]],volunteer:[["saved","Saved"],["signed","Signed up"],["done","Volunteered"]]};
+const FINISHED=["applied","awarded","signed","done"];
+function defaultSteps(o){return o.side==="charity"?["Read the requirements on the official page","Gather what the application asks for","Submit the application"]:["Check shift times on the official page","Sign up for a shift"]}
+
+/* ---------- state ---------- */
+const state={requests:{},profiles:{},results:{charity:null,volunteer:null},loading:{}};
+let caps={sample:null,db:null,user:null,uid:null,isOwner:false};
+let saveTimer=null;
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const checked=id=>[...document.querySelectorAll("#"+id+" input:checked")].map(x=>x.value);
+function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("show"),2600)}
+const today=()=>new Date().toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+
+/* ---------- routing ---------- */
+const VIEWS=["charity","volunteer","browse","saved"];
+function show(id){
+ if(!VIEWS.includes(id))id="charity";
+ document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===id));
+ document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===id));
+ if(id==="browse")renderBrowse();
+ if(id==="saved")renderSaved();
+}
+document.querySelectorAll(".nav-btn").forEach(b=>b.addEventListener("click",()=>{location.hash=b.dataset.view;if(location.hash.slice(1)===b.dataset.view)show(b.dataset.view);window.scrollTo({top:0})}));
+window.addEventListener("hashchange",()=>show(location.hash.slice(1)));
+
+/* ---------- forms ---------- */
+const nC=OPPS.filter(o=>o.side==="charity").length,nV=OPPS.filter(o=>o.side==="volunteer").length;
+$("cCount").textContent=`Checks all ${nC} Boston-area grants and resources`;
+$("vCount").textContent=`Checks all ${nV} Boston-area volunteer opportunities`;
+document.querySelectorAll("[data-clear]").forEach(b=>b.addEventListener("click",()=>{
+ const p=b.dataset.clear,sec=p==="c"?$("charity"):$("volunteer");
+ sec.querySelectorAll("input[type=text],textarea").forEach(i=>i.value="");
+ sec.querySelectorAll("input[type=checkbox]").forEach(i=>i.checked=false);
+ if(p==="v")$("vSize").value=1;
+ $(p+"Example").hidden=true;$(p+"Prompt").focus();
+}));
+function readProfile(side){
+ if(side==="charity")return{name:$("cName").value.trim()||"My organization",description:$("cPrompt").value.trim(),location:$("cLoc").value.trim(),legalStatus:$("cStatus").value,size:$("cSize").value,needs:checked("cNeeds"),serves:checked("cServe")};
+ return{name:$("vName").value.trim()||"Me",description:$("vPrompt").value.trim(),who:$("vWho").value,youngestAge:$("vAge").value,groupSize:Number($("vSize").value)||1,causes:checked("vCauses"),availability:checked("vWhen")};
+}
+
+/* ---------- AI matching ---------- */
+function buildPrompt(side,profile){
+ const list=OPPS.filter(o=>o.side===side).map(o=>({id:o.id,category:o.cat,name:o.name,organization:o.org,summary:o.summary,eligibility:o.eligibility,timing:o.deadline||o.facts.When||"",details:o.facts}));
+ const who=side==="charity"?"a charity or community organization looking for grants, materials and services":"a volunteer (person, family or group) looking for volunteer opportunities";
+ const rules=side==="charity"
+ ?`- Check legal status against each requirement (e.g. 501(c)(3) only). Check location (Boston residents, Massachusetts). Check whether the opportunity is open today; a closed cycle or paused intake is at best "check".
+- An opportunity in a category the user did not ask for can still be "likely"/"check" if their description clearly shows the need; otherwise "not_eligible" with why = "You didn't ask for this".`
+ :`- Check minimum ages against the youngest volunteer (55+ only roles fail anyone younger). Check the schedule against their availability. Check group size where it matters (e.g. groups of 5+). Driving roles need a car and license.
+- An opportunity in a cause the user did not pick can still be "likely" if it fits their description; otherwise "not_eligible".`;
+ return `You are GoodMarket's eligibility matcher for the Boston area. Today is ${today()}.
+The user is ${who}.
+
+USER PROFILE (JSON):
+${JSON.stringify(profile,null,1)}
+
+OPPORTUNITIES (JSON) — use ONLY these facts; never invent amounts, dates, ages or requirements:
+${JSON.stringify(list)}
+
+For EVERY opportunity, decide:
+- status: "qualifies" (meets every stated requirement and it is available now), "likely" (fits, but at least one requirement isn't confirmed by the profile), "check" (partial fit, missing info, or not open right now), "not_eligible" (a stated requirement clearly fails, or it doesn't match what they want).
+- fit: 0–100, how well it serves what they asked for.
+- why: 1–2 plain sentences addressed to the user as "you", naming the specific requirement or detail that decided it.
+- confirm: 0–3 short things they must verify or prepare before applying/signing up (e.g. "Have your 501(c)(3) letter ready", "Submit by Nov 23"). Empty for not_eligible.
+${rules}
+
+Reply with ONLY this JSON, no prose:
+{"summary":"one sentence summarizing their best options","matches":[{"id":"...","status":"...","fit":0,"why":"...","confirm":["..."]}]}`;
+}
+
+function ruleMatch(side,p){
+ const out=[];
+ const boston=/boston|roxbury|dorchester|jamaica plain|mattapan|roslindale|hyde park|east boston|charlestown|south end|back bay|allston|brighton|fenway|south boston|west roxbury|mission hill/i.test(p.location||"");
+ const ma=boston||/\bma\b|massachusetts|cambridge|somerville|newton|quincy|chelsea|brookline|medford|malden|everett|framingham|lynn|waltham/i.test(p.location||"");
+ const text=(p.description||"").toLowerCase();
+ for(const o of OPPS.filter(o=>o.side===side)){
+  let status="likely",fit=55,why="",confirm=[];
+  if(side==="charity"){
+   const wants=p.needs.includes(o.cat);fit=wants?70:20;
+   const c3=p.legalStatus==="501(c)(3) nonprofit",np=c3||/pending|school/i.test(p.legalStatus);
+   if(o.id==="g1"){const sen=p.serves.includes("Older adults / seniors");status=boston?(sen?"qualifies":"likely"):"check";fit+=sen?20:0;why=boston?(sen?"You serve older Bostonians, which is what Age Strong funds.":"You serve Boston residents, but Age Strong funds programs for older adults."):"This grant is for programs serving Boston residents.";confirm=["Next review deadline Nov 23, 2026, 9 PM"];}
+   else if(o.id==="g2"){const art=p.serves.includes("Arts & public space")||/art/.test(text);status=ma?(art?"likely":"not_eligible"):"not_eligible";fit=art?80:15;why=art?"You do arts or public-space work in Massachusetts; this needs an artist collaboration on spatial justice.":"This grant only funds public art projects made with artists.";confirm=art?["Line up an artist partner","Deadline Dec 1, 2026"]:[];}
+   else if(o.id==="g3"){status=c3?(boston?"qualifies":"likely"):"not_eligible";why=c3?"You're a 501(c)(3), which is the main requirement.":"Only 501(c)(3) organizations can apply.";confirm=c3?["Have your 501(c)(3) letter ready","Decisions take about 60 days"]:[];}
+   else if(o.id==="g4"){status=boston?"check":"not_eligible";why=boston?"You serve Boston residents, but the fall 2026 cycle is closed.":"Projects must benefit Boston residents.";confirm=boston?["Next cycle opens late March 2027"]:[];}
+   else if(o.id==="m3"){const kids=p.serves.includes("Children & youth");status=kids&&np?"check":"not_eligible";fit=kids?75:15;why=kids?"You serve children, but new partner intake is paused right now.":"This is for organizations distributing essentials to children.";confirm=kids?["Submit the inquiry form now"]:[];}
+   else if(o.id==="p2"){status=np?"likely":"check";why="Free bookkeeping for small nonprofits; they're based in Duxbury.";confirm=["Ask if they serve Boston-area organizations"];}
+   else{status=np&&ma?"qualifies":(ma?"check":"not_eligible");why=np?"You're a Massachusetts nonprofit, which is who this serves.":"This serves registered nonprofits and community organizations.";if(o.id==="m2")confirm=["Ask for pricing; not free"];if(o.id==="m1")confirm=["Submit a wishlist","Arrange delivery"];if(o.id==="p1")confirm=["Not for urgent matters"];}
+   if(!wants&&status!=="not_eligible"){status="not_eligible";why=`You didn't ask for ${o.cat.toLowerCase()}.`;confirm=[];}
+  }else{
+   const age=p.youngestAge,young=/Under 13|13–15/.test(age),u16=/Under 13|13–15/.test(age),u13=age==="Under 13";
+   const likes=p.causes.includes(o.cat);fit=likes?70:20;status=likes?"likely":"not_eligible";why=likes?`Matches your interest in ${o.cat.toLowerCase()}.`:`You didn't pick ${o.cat.toLowerCase()}.`;
+   const av=p.availability,wk=av.includes("Weekday daytime"),ev=av.includes("Weekday evenings"),sat=av.includes("Saturdays"),ong=av.includes("Ongoing weekly commitment");
+   const sched={v1:wk||sat,v2:wk||ev,v3:wk||sat,v4:wk||sat,v5:ev&&ong,v6:ong,v7:ong,v8:sat,v9:true,v10:true,v11:true,v12:true}[o.id];
+   if(likes){
+    if(o.id==="v6"&&age!=="55+"){status="not_eligible";why="Literations reading coaches must be 55 or older.";}
+    else if(o.id==="v2"&&u13){status="not_eligible";why="Community Servings volunteers must be 13 or older.";}
+    else if((o.id==="v3"||o.id==="v5")&&u16){status="not_eligible";why="Volunteers must be 16 or older.";}
+    else if(sched){status=["v1","v2","v4","v8"].includes(o.id)?"qualifies":"likely";fit+=15;why=`Fits your ${o.cat.toLowerCase()} interest and your schedule.`;}
+    else{status="check";why="The cause fits, but the schedule may not match when you're free.";}
+    if(o.id==="v4"&&young)why+=" Kids 5+ welcome with an adult.";
+    if(o.id==="v3"&&p.groupSize>=5){fit+=10;confirm.push("Email volunteer@womenslunchplace.org for a group shift");}
+    if(o.id==="v5")confirm.push("Tutor application, CORI and training");
+    if(o.id==="v7")confirm.push("One-year commitment");
+    if(o.id==="v4"&&p.groupSize>=10)confirm.push("Ask about Tuesday large-group shifts");
+   }
+  }
+  out.push({id:o.id,status,fit:Math.min(100,fit),why,confirm:status==="not_eligible"?[]:confirm});
+ }
+ return{summary:"",matches:out};
+}
+
+let runId={charity:0,volunteer:0};
+function finalize(side,res,mode){
+ res=JSON.parse(JSON.stringify(res||{}));const seen=new Set();res.matches=(res.matches||[]).filter(m=>m&&byId[m.id]&&byId[m.id].side===side&&STATUS[m.status]&&!seen.has(m.id)&&seen.add(m.id));
+ for(const o of OPPS.filter(o=>o.side===side))if(!seen.has(o.id))res.matches.push({id:o.id,status:"check",fit:30,why:"Not assessed. Open the official page to check.",confirm:[]});
+ state.results[side]={...res,mode};
+}
+async function runMatch(side){
+ const profile=readProfile(side);const btn=side==="charity"?$("cGo"):$("vGo");const box=side==="charity"?$("cResults"):$("vResults");
+ if(side==="charity"&&!profile.description&&!profile.needs.length){toast("Describe your organization or pick what you need.");return}
+ if(side==="volunteer"&&!profile.description&&!profile.causes.length){toast("Describe yourself or pick a cause.");return}
+ state.profiles[side]=profile;const my=++runId[side];
+ finalize(side,ruleMatch(side,profile),caps.sample?"pending":"offline");
+ renderResultsFor(side);box.scrollIntoView({behavior:"smooth",block:"start"});persist();
+ if(!caps.sample)return;
+ btn.disabled=true;btn.textContent="AI is checking…";
+ const ctl=new AbortController();const timer=setTimeout(()=>ctl.abort(),90000);
+ let mode="ai",res=null;
+ try{res=await caps.sample.json(buildPrompt(side,profile),{signal:ctl.signal});if(!res||!Array.isArray(res.matches))throw{code:"invalid_json"}}
+ catch(e){res=null;mode=e&&e.code==="not_granted"?"declined":(e&&e.code==="cancelled"?"timeout":"error")}
+ clearTimeout(timer);
+ if(my!==runId[side])return;
+ btn.disabled=false;btn.textContent=side==="charity"?"Find what I qualify for":"Find my volunteer matches";
+ if(res)finalize(side,res,"ai");else state.results[side].mode=mode;
+ renderResultsFor(side);persist();
+}
+
+function safeRun(side){runMatch(side).catch(e=>{const box=side==="charity"?$("cResults"):$("vResults");box.innerHTML=`<div class="empty"><b>Matching hit an error.</b>${esc(e&&(e.message||e.code)||String(e))}</div>`;const b=side==="charity"?$("cGo"):$("vGo");b.disabled=false;b.textContent=side==="charity"?"Find what I qualify for":"Find my volunteer matches"})}
+$("cGo").addEventListener("click",()=>safeRun("charity"));
+$("vGo").addEventListener("click",()=>safeRun("volunteer"));
+
+/* ---------- rendering ---------- */
+function factsHTML(o){return`<dl class="facts">${Object.entries(o.facts).map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>`}
+function cardHTML(o,m){
+ const r=state.requests[o.id];const verb="Add to my list";const applyLbl=o.side==="charity"?"Apply":"Sign up";
+ return`<article class="match ${r?"saved":""}" data-c="${esc(o.cat)}">
+  <div class="match-top"><div class="type"><span class="ico">${ICON[o.cat]}</span>${esc(o.cat)}</div>${m?`<span class="status ${m.status}">${STATUS[m.status]}</span>`:""}</div>
+  <div><h3>${esc(o.name)}</h3><div class="org">${esc(o.org)}</div>${dueHTML(o.id)}</div>
+  ${m?"":`<p class="hint" style="margin:0;font-size:14px">${esc(o.summary)}</p>`}
+  ${factsHTML(o)}
+  ${m?`<div class="why"><b>Why this match</b>${esc(m.why)}</div>`:""}
+  ${m&&m.confirm&&m.confirm.length?`<div><div class="confirm-title">Before you ${o.side==="charity"?"apply":"sign up"}</div><ul class="confirm">${m.confirm.slice(0,3).map(c=>`<li>${esc(c)}</li>`).join("")}</ul></div>`:""}
+  ${m?`<div class="fitbar">Fit<span><i style="width:${Math.max(4,Math.min(100,Number(m.fit)||0))}%"></i></span>${Math.round(Number(m.fit)||0)}</div>`:""}
+  <div class="match-foot"><a class="btn primary small" href="${esc(o.link)}" target="_blank" rel="noopener">${applyLbl} ${ICON.out}</a>
+   ${r?`<span class="saved-flag">${ICON.check}On your list</span>`:`<button class="btn secondary small" data-request="${o.id}">${verb}</button>`}</div>
+ </article>`;
+}
+function renderResultsFor(side){
+ const box=side==="charity"?$("cResults"):$("vResults");const res=state.results[side];if(!res){box.innerHTML=emptyResults(side);return}
+ const ms=[...res.matches].sort((a,b)=>ORDER[a.status]-ORDER[b.status]||(urg(b.id)-urg(a.id))||(b.fit-a.fit));
+ const good=ms.filter(m=>m.status!=="not_eligible"),no=ms.filter(m=>m.status==="not_eligible");
+ const count=k=>ms.filter(m=>m.status===k).length;
+ const note={pending:"Showing quick results now. AI is double-checking each requirement and will update this list in under a minute. If Claude asks for permission, allow it to continue.",timeout:"The AI check took too long, so these results use GoodMarket’s built-in eligibility rules. Try again for the full AI check.",offline:"",declined:"You didn't allow Claude for this page, so these results use GoodMarket's built-in eligibility rules.",error:"The AI matcher didn't respond, so these results use GoodMarket's built-in eligibility rules. Try again in a moment."}[res.mode];
+ box.innerHTML=`${note?`<div class="mode-note">${note}</div>`:""}
+ <div class="results-head"><div><div class="eyebrow">Your matches${res.mode==="ai"?" · checked by AI":res.mode==="pending"?" · AI check in progress":""}</div><h2>${count("qualifies")} you qualify for, ${count("likely")} likely, ${count("check")} to check</h2>${res.summary?`<p class="summary-line">${esc(res.summary)}</p>`:""}</div>
+ <div class="tally">${["qualifies","likely","check","not_eligible"].map(k=>`<span class="status ${k}">${count(k)} ${STATUS[k].toLowerCase()}</span>`).join("")}</div></div>
+ ${(()=>{const u=good.filter(m=>urg(m.id));return u.length?`<div class="mode-note"><b>Closing soon:</b> ${u.map(m=>{const d=nextDue(m.id);return`${esc(byId[m.id].name)} (${d.date})`}).join(", ")}. These are marked below.</div>`:""})()}
+ ${good.length?`<div class="match-grid">${good.map(m=>cardHTML(byId[m.id],m)).join("")}</div>`:`<div class="empty"><b>Nothing fits yet.</b>Try adding more detail to your description or choosing more ${side==="charity"?"needs":"causes and times"}.</div>`}
+ ${no.length?`<details class="others"><summary>Not a fit right now (${no.length})</summary><div class="no-list">${no.map(m=>{const o=byId[m.id];return`<div class="no-item" data-c="${esc(o.cat)}"><span class="ico">${ICON[o.cat]}</span><div><b>${esc(o.name)}</b> <span class="hint">· ${esc(o.org)}</span><p>${esc(m.why)}</p></div></div>`}).join("")}</div></details>`:""}`;
+}
+function emptyResults(side){
+ return`<div class="empty"><b>Your matches will appear here.</b>${side==="charity"?`Each grant and resource gets a clear answer: qualifies, likely qualifies, check eligibility, or not a fit, with the reason and what to prepare.`:`Each opportunity is checked against your ages, schedule and interests, with the reason and what to do before signing up.`}</div>`;
+}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-request]");if(b)openRequest(b.dataset.request)});
+
+/* browse */
+let browseSide="all";
+$("browseSide").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;browseSide=b.dataset.side;[...$("browseSide").children].forEach(x=>x.classList.toggle("on",x===b));renderBrowse()});
+$("browseQ").addEventListener("input",renderBrowse);
+function renderBrowse(){
+ const q=$("browseQ").value.trim().toLowerCase();
+ const list=OPPS.filter(o=>(browseSide==="all"||o.side===browseSide)&&(!q||JSON.stringify(o).toLowerCase().includes(q)));
+ $("browseGrid").innerHTML=list.map(o=>cardHTML(o,null)).join("")||`<div class="empty"><b>No opportunities match “${esc(q)}”.</b>Try a broader word like “food”, “grant” or “kids”.</div>`;
+}
+
+/* saved */
+function renderSaved(){
+ const items=Object.keys(state.requests).filter(id=>byId[id]).map(id=>({id,o:byId[id],r:state.requests[id],d:nextDue(id)}));
+ items.forEach(x=>{if(!x.r.checklist)x.r.checklist=defaultSteps(x.o).map(t=>({t,done:false}));if(!x.r.stage)x.r.stage="saved"});
+ const started=items.filter(x=>x.r.stage!=="saved"||x.r.checklist.some(c=>c.done)).length;
+ const finished=items.filter(x=>FINISHED.includes(x.r.stage)).length;
+ const soon=items.filter(x=>x.d&&x.d.urgent&&!FINISHED.includes(x.r.stage)).length;
+ $("myMetrics").innerHTML=`<div class="metric"><b>${items.length}</b><span>On your list</span></div><div class="metric"><b>${started}</b><span>Started</span></div><div class="metric"><b>${finished}</b><span>Applied or signed up</span></div><div class="metric"><b>${soon}</b><span>Due within 2 weeks</span></div>`;
+ items.sort((a,b)=>(FINISHED.includes(a.r.stage)-FINISHED.includes(b.r.stage))||((a.d?a.d.t:Infinity)-(b.d?b.d.t:Infinity))||(b.r.time-a.r.time));
+ $("savedList").innerHTML=items.length?`<div class="match-grid">${items.map(({id,o,r})=>{
+  const doneN=r.checklist.filter(c=>c.done).length,tot=r.checklist.length;
+  return`<article class="match saved" data-c="${esc(o.cat)}">
+   <div class="match-top"><div class="type"><span class="ico">${ICON[o.cat]}</span>${esc(o.cat)}</div><select class="stage" data-stage="${id}" aria-label="Progress for ${esc(o.name)}">${STAGES[o.side].map(([v,l])=>`<option value="${v}" ${r.stage===v?"selected":""}>${l}</option>`).join("")}</select></div>
+   <div><h3>${esc(o.name)}</h3><div class="org">${esc(o.org)}</div>${FINISHED.includes(r.stage)?"":dueHTML(id)}</div>
+   <div><div class="confirm-title">Checklist · ${doneN} of ${tot} done</div><ul class="checklist">${r.checklist.map((c,i)=>`<li><label><input type="checkbox" data-step="${id}|${i}" ${c.done?"checked":""}><span>${esc(c.t)}</span></label></li>`).join("")}</ul></div>
+   <div class="fitbar">Progress<span><i style="width:${tot?Math.max(4,doneN/tot*100):4}%"></i></span>${tot?Math.round(doneN/tot*100):0}%</div>
+   <div class="match-foot"><button class="link-btn" data-remove="${id}">Remove</button><a class="btn primary small" href="${esc(o.link)}" target="_blank" rel="noopener">${o.side==="charity"?"Apply":"Sign up"} ${ICON.out}</a></div>
+  </article>`}).join("")}</div>`
+ :`<div class="empty"><b>Nothing on your list yet.</b>Run the charity or volunteer matcher, then choose “Add to my list” on a match.</div>`;
+ $("saveNote").textContent=caps.db&&caps.uid?"Your list and checklist progress are saved for next time.":"Your list and checklist progress are saved in this browser.";
+}
+document.addEventListener("change",e=>{
+ const s=e.target.closest("[data-stage]");
+ if(s){state.requests[s.dataset.stage].stage=s.value;persist();renderSaved();toast(s.value==="saved"?"Progress updated.":`Marked as ${s.options[s.selectedIndex].text.toLowerCase()}.`);return}
+ const c=e.target.closest("[data-step]");
+ if(c){const [id,i]=c.dataset.step.split("|");const r=state.requests[id];r.checklist[+i].done=c.checked;if(c.checked&&r.stage==="saved"&&r.side==="charity")r.stage="applying";persist();renderSaved()}
+});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-remove]");if(!b)return;const o=byId[b.dataset.remove];delete state.requests[b.dataset.remove];persist();updateBadge();renderSaved();renderResultsFor("charity");renderResultsFor("volunteer");toast(`Removed ${o?o.name:"it"} from your list.`)});
+function updateBadge(){const n=Object.keys(state.requests).length;$("savedCount").textContent=n;$("savedCount").hidden=!n}
+
+/* ---------- research modal ---------- */
+let current=null;
+function openModal(html){$("modalContent").innerHTML=html;$("modalBackdrop").classList.add("open")}
+function closeModal(){$("modalBackdrop").classList.remove("open");current=null}
+$("modalClose").addEventListener("click",closeModal);
+$("modalBackdrop").addEventListener("click",e=>{if(e.target===$("modalBackdrop"))closeModal()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
+function openRequest(id){
+ const o=byId[id];current=o;const ch=o.side==="charity";
+ openModal(`<div class="eyebrow">Add to my list</div><h2 id="modalTitle">${esc(o.name)}</h2>
+ <p class="lead sm">${ch?"GoodMarket will add this to your list so you can follow up with":"GoodMarket will add this to your list so you can sign up with"} <b>${esc(o.org)}</b>.</p>
+ <div class="profile-box">${esc(o.summary)}</div>
+ <p class="question">Had you heard of ${esc(o.org)} before today?</p>
+ <button class="choice" data-known="0"><b>No, this is new to me.</b><span>I wouldn't have found this on my own.</span></button>
+ <button class="choice" data-known="1"><b>Yes, I already knew about them.</b><span>I'd already found or heard of this.</span></button>`);
+ document.querySelectorAll("[data-known]").forEach(b=>b.addEventListener("click",()=>askRating(b.dataset.known==="1")));
+}
+function askRating(known){
+ const o=current;let rating=0;
+ openModal(`<div class="eyebrow">One quick question</div><h2 id="modalTitle">How relevant is this match for you?</h2>
+ <p class="lead sm">This helps us improve matching. It isn't a public review.</p>
+ <div class="stars">${[1,2,3,4,5].map(n=>`<button class="star" data-star="${n}" aria-label="${n} of 5">${n}</button>`).join("")}</div>
+ <div class="scale"><span>Not relevant</span><span>Very relevant</span></div>
+ <div class="actions"><button class="btn secondary" id="skipR">Skip</button><button class="btn primary" id="saveR">Save</button></div>`);
+ document.querySelectorAll("[data-star]").forEach(b=>b.addEventListener("click",()=>{rating=Number(b.dataset.star);document.querySelectorAll("[data-star]").forEach(x=>x.classList.toggle("on",Number(x.dataset.star)<=rating))}));
+ const done=r=>{
+  const res=state.results[o.side];const m=res&&res.matches.find(x=>x.id===o.id);
+  const steps=(m&&m.confirm&&m.confirm.length?m.confirm.slice(0,3):defaultSteps(o));
+  state.requests[o.id]={side:o.side,alreadyKnown:known,rating:r,time:Date.now(),status:m?m.status:null,fit:m?Number(m.fit)||null:null,stage:"saved",checklist:steps.map(t=>({t:String(t),done:false}))};
+  closeModal();updateBadge();renderResultsFor("charity");renderResultsFor("volunteer");if($("browse").classList.contains("active"))renderBrowse();persist();
+  toast(o.side==="charity"?"Added to your list. Use Apply when you're ready.":"Added to your list. Use Sign up when you're ready.");
+ };
+ $("skipR").addEventListener("click",()=>done(null));
+ $("saveR").addEventListener("click",()=>{if(!rating){toast("Pick a number, or skip.");return}done(rating)});
+}
+
+/* ---------- persistence (db) ---------- */
+function persist(){
+ if(!caps.db||!caps.uid){try{localStorage.setItem("goodmarket:v1",JSON.stringify({requests:state.requests,profiles:state.profiles}))}catch(e){}return}clearTimeout(saveTimer);
+ saveTimer=setTimeout(async()=>{try{await caps.db.doc("responses/"+caps.uid).set({requests:state.requests,profiles:state.profiles,updatedAt:Date.now()})}catch(e){}},600);
+}
+async function restore(){
+ try{const snap=await caps.db.doc("responses/"+caps.uid).get();const d=snap.data();if(d){const copy=v=>JSON.parse(JSON.stringify(v||{}));state.requests=copy(d.requests);state.profiles=copy(d.profiles);updateBadge();renderResultsFor("charity");renderResultsFor("volunteer");if($("saved").classList.contains("active"))renderSaved()}}catch(e){}
+}
+
+
+/* ---------- boot ---------- */
+try{const d=JSON.parse(localStorage.getItem("goodmarket:v1")||"null");if(d){state.requests=d.requests||{};state.profiles=d.profiles||{};updateBadge()}}catch(e){}
+renderResultsFor("charity");renderResultsFor("volunteer");renderBrowse();
+show(location.hash.slice(1)||"charity");
+(async()=>{
+ if(!window.claude||!window.claude.use)return;
+ const [sample,db,user]=await Promise.all([claude.use("sample"),claude.use("db"),claude.use("user")]);
+ caps.sample=sample;caps.db=db;caps.user=user;
+ if(user){try{caps.isOwner=await user.isOwner();caps.uid=await user.id()}catch(e){}}
+ if(db&&caps.uid)restore();
+})();
+})();
+</script>
+
+</body>
+</html>
